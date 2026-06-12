@@ -8,6 +8,7 @@ from pocket_tts.models.tts_model import (  # noqa: E402
     export_model_state,
 )
 
+import pocket_tts.models.mimistyle as mimistyle
 # Public methods:
 # TTSModel.device
 # TTSModel.sample_rate
@@ -16,4 +17,4 @@ from pocket_tts.models.tts_model import (  # noqa: E402
 # TTSModel.generate_audio_stream
 # TTSModel.get_state_for_audio_prompt
 
-__all__ = ["TTSModel", "export_model_state"]
+__all__ = ["TTSModel", "export_model_state", "mimistyle"]
