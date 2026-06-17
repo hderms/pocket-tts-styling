@@ -180,9 +180,9 @@ class MimiStyleModel(nn.Module):
         latent_dim: int
     ):
         super().__init__()
-        self.mimicodec = mimicodec
         self.conditioning_layer = MimiFiLMConditioner(control_dim=control_dim, latent_dim=latent_dim, hidden_dim=128)
         self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256)
+        self.mimi = mimicodec
 
         self.prediction_head = PredictionHead(latent_dim, hidden_dim=256, output_dim=control_dim)
        
