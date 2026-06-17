@@ -90,7 +90,7 @@ class MimiMLPConditioner(nn.Module):
         # will output a vector of pure zeros at the start of training.
         # This ensures the operation starts as a perfect identity function (z + 0 = z),
         # preventing the frozen decoder from collapsing due to chaotic noise.
-        nn.init.zeros_(self.mlp[-1].weight)
+        nn.init.zeros_(self.mlp[-1].weight as Tensor)
         nn.init.zeros_(self.mlp[-1].bias)
 
     def forward(self, z: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
@@ -190,14 +190,20 @@ class MimiStyleModel(nn.Module):
 
     @property
     def frame_size(self) -> int:
-        return int(self.sample_rate / self.frame_rate)
+        return int(self.sample_rate() / self.frame_rate())
+
+    def sample_rate(self) -> int:
+        return self.mimi.sample_rate
+
+    def frame_rate(self) -> float:
+        return self.mimi.frame_rate
 
     def _to_framerate(self, x: torch.Tensor):
-        return self.mimicodec._to_framerate(x)
+        return self.mimi._to_framerate(x)
       
 
     def _to_encoder_framerate(self, x: torch.Tensor, mimi_state) -> torch.Tensor:
-        return self.mimicodec._to_encoder_framerate(x, mimi_state)
+        return self.mimi._to_encoder_framerate(x, mimi_state)
 
     def forward(self, x: torch.Tensor, c: torch.Tensor):
         latents = None
@@ -213,7 +219,7 @@ class MimiStyleModel(nn.Module):
         # =====================================================================
         conditioned_latents = self.conditioning_mlp_layer.forward(latents, c)
 
-        pred = self.projection_head.forward(conditioned_latents)
+        pred = self.prediction_head.forward(conditioned_latents)
 
         # =====================================================================
         # STAGE 3: CONDITIONED LATENTS -> DECODER -> AUDIO
@@ -239,7 +245,7 @@ class MimiStyleModel(nn.Module):
 
 
     def decode_from_latent(self, latent: torch.Tensor, mimi_state) -> torch.Tensor:
-        return self.mimicodec.decode_from_latent(latent, mimi_state)
+        return self.mimi.decode_from_latent(latent, mimi_state)
 
     def encode_to_latent(self, x: torch.Tensor) -> torch.Tensor:
-        return self.mimicodec.encode_to_latent(x)
+        return self.mimi.encode_to_latent(x)
