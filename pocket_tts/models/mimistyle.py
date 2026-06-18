@@ -252,3 +252,31 @@ class MimiStyleModel(nn.Module):
 
     def encode_to_latent(self, x: torch.Tensor) -> torch.Tensor:
         return self.mimi.encode_to_latent(x)
+
+
+
+class ControlVector():
+    # Define the exact feature order from the schema to ensure consistent tensor dimension mapping
+    FEATURE_KEYS = [
+        'AGEV', 'GEND', 'REGS', 'ESTH', 'EXPL', 'BKGN', 'RCQL', 'BRGT', 'WARM', 'FULL',
+        'HARM', 'METL', 'ROUG', 'R_CHST', 'R_HEAD', 'R_MASK', 'R_MIXD', 'R_NASL',
+        'R_ORAL', 'R_THRT', 'TEMP', 'RANG', 'EMPH', 'CHNK', 'SMTH', 'DARC', 'VFLX',
+        'CLRT', 'DFLU', 'COGL', 'STRU', 'RESP', 'TENS', 'ATCK', 'AROU', 'ARSH',
+        'VALN', 'VALS', 'VOLT', 'VULN', 'FOCS', 'STNC', 'S_DRAM', 'S_NARR', 'S_STRY',
+        'S_NEWS', 'S_AUTH', 'S_FORM', 'S_TECH', 'S_MONO', 'S_CONV', 'S_CASU',
+        'S_PLAY', 'S_CART', 'S_RANT', 'S_WHIS', 'S_ASMR'
+    ]
+    @classmethod
+    def build_control_vector(cls, row):
+        """
+        Takes a dataset row matching the provided schema and returns a 1D PyTorch tensor 
+        containing all the 'value' integers.
+        """
+        # Extract the 'value' for each feature in the exact order defined above
+        values = [row[feature_name]['value'] for feature_name in FEATURE_KEYS]
+        
+        # Pack into a PyTorch tensor
+        # Using torch.int32 to match the Value('int32') from the HuggingFace schema
+        control_vector = torch.tensor(values, dtype=torch.int32)
+        
+        return control_vector
