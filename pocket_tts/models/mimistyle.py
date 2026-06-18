@@ -178,7 +178,8 @@ class MimiStyleModel(nn.Module):
         self,
         mimicodec: MimiModel,
         control_dim: int,
-        latent_dim: int
+        latent_dim: int,
+        batch_size: int 
     ):
         super().__init__()
         print("Initialized mimi style model")
@@ -187,7 +188,11 @@ class MimiStyleModel(nn.Module):
 
         self.prediction_head = PredictionHead(latent_dim, hidden_dim=256, output_dim=control_dim)
        
+        self.batch_size = batch_size
 
+        # Stateful modules require cache/offset initialization before decoding.
+        # We initialize the state dictionary with a sequence length buffer.
+        self.mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
 
     @property
     def frame_size(self) -> int:
@@ -213,7 +218,7 @@ class MimiStyleModel(nn.Module):
         # STAGE 1: AUDIO -> ENCODER -> LATENTS
         # =====================================================================
         # Uses the method defined in MimiModel to pad and process through SEANet
-            latents = self.mimi.encode_to_latent(x)
+            latents = self.encode_to_latent(x)
 
         # =====================================================================
         # STAGE 2: LATENTS -> CONDITIONED LATENTS
@@ -227,9 +232,6 @@ class MimiStyleModel(nn.Module):
         # STAGE 3: CONDITIONED LATENTS -> DECODER -> AUDIO
         # =====================================================================
         
-        # Stateful modules require cache/offset initialization before decoding.
-        # We initialize the state dictionary with a sequence length buffer.
-        mimi_state = init_states(self.mimi, batch_size=1, sequence_length=10000)
         
         # Mirroring the internal logic of TTSModel._decode_and_dump:
         # Pass through the DummyQuantizer if dimensions align, otherwise pass raw.
@@ -239,9 +241,9 @@ class MimiStyleModel(nn.Module):
             latent_to_decode = conditioned_latents
 
         loss = 1 - F.cosine_similarity(pred, c, dim=-1).mean()
-            
+        
         # Decode back to waveform using the instantiated state
-        reconstructed_wav = self.mimi.decode_from_latent(latent_to_decode, mimi_state)
+        reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
         return loss, reconstructed_wav
 
 
