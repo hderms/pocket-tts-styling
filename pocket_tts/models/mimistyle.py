@@ -36,15 +36,15 @@ class PredictionHead(nn.Module):
             nn.BatchNorm1d(hidden_dim),
             
             # 3. Non-linearity
-            nn.ReLU(inplace=True),
+            nn.ReLU(),
             
             # 4. Final linear projection to match the target conditioning vector
             nn.Linear(hidden_dim, output_dim)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        print("x is: ", x.shape)
-        return self.head(x)
+        print("x is: ", x.squeeze().shape)
+        return self.head(x.squeeze())
 
 class ProjectionHead(nn.Module):
     def __init__(self, backbone_dim: int, hidden_dim: int, out_dim: int):
