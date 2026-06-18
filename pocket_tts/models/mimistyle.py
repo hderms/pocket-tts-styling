@@ -238,8 +238,7 @@ class MimiStyleModel(nn.Module):
         else:
             latent_to_decode = conditioned_latents
 
-        pred = self.prediction_head.forward(conditioned_latents)
-        loss = 1 - F.cosine_similarity(pred, conditioned_latents, dim=-1).mean()
+        loss = 1 - F.cosine_similarity(pred, c, dim=-1).mean()
             
         # Decode back to waveform using the instantiated state
         reconstructed_wav = self.mimi.decode_from_latent(latent_to_decode, mimi_state)
