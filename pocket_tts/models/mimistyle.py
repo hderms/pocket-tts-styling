@@ -181,6 +181,7 @@ class MimiStyleModel(nn.Module):
         latent_dim: int
     ):
         super().__init__()
+        print("Initialized mimi style model")
         self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256)
         self.mimi = mimicodec
 
