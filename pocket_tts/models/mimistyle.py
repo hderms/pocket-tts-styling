@@ -241,9 +241,9 @@ class MimiStyleModel(nn.Module):
             latent_to_decode = conditioned_latents
 
         loss = 1 - F.cosine_similarity(pred, c, dim=-1).mean()
-        
+        with torch.no_grad():
         # Decode back to waveform using the instantiated state
-        reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
+            reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
         return loss, reconstructed_wav
 
 
