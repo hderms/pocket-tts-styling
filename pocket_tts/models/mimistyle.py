@@ -21,7 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class PredictionHead(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int = 512, output_dim: int = 512):
+    def __init__(self, input_dim: int, hidden_dim: int , output_dim: int ):
         """
         A standard Prediction Head architecture.
         Typically features a bottleneck design with BatchNorm.
@@ -43,6 +43,7 @@ class PredictionHead(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        print("x is: ", x.shape)
         return self.head(x)
 
 class ProjectionHead(nn.Module):
@@ -180,7 +181,6 @@ class MimiStyleModel(nn.Module):
         latent_dim: int
     ):
         super().__init__()
-        self.conditioning_layer = MimiFiLMConditioner(control_dim=control_dim, latent_dim=latent_dim, hidden_dim=128)
         self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256)
         self.mimi = mimicodec
 
@@ -218,6 +218,7 @@ class MimiStyleModel(nn.Module):
         # STAGE 2: LATENTS -> CONDITIONED LATENTS
         # =====================================================================
         conditioned_latents = self.conditioning_mlp_layer.forward(latents, c)
+        print(conditioned_latents.shape)
 
         pred = self.prediction_head.forward(conditioned_latents)
 
