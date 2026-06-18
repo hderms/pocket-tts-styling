@@ -90,7 +90,7 @@ class MimiMLPConditioner(nn.Module):
         # will output a vector of pure zeros at the start of training.
         # This ensures the operation starts as a perfect identity function (z + 0 = z),
         # preventing the frozen decoder from collapsing due to chaotic noise.
-        nn.init.zeros_(self.mlp[-1].weight as Tensor)
+        nn.init.zeros_(self.mlp[-1].weight)
         nn.init.zeros_(self.mlp[-1].bias)
 
     def forward(self, z: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
