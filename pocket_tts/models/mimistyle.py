@@ -44,7 +44,7 @@ class PredictionHead(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         print("x is: ", x.squeeze().shape)
-        return self.head(x.squeeze())
+        return self.head(x)
 
 class ProjectionHead(nn.Module):
     def __init__(self, backbone_dim: int, hidden_dim: int, out_dim: int):
@@ -241,6 +241,7 @@ class MimiStyleModel(nn.Module):
             latent_to_decode = conditioned_latents
 
         loss = 1 - F.cosine_similarity(pred, c, dim=-1).mean()
+        
         with torch.no_grad():
         # Decode back to waveform using the instantiated state
             reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
