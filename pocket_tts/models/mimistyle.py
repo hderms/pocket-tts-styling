@@ -44,7 +44,7 @@ class PredictionHead(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         print("x is: ", x.shape)
-        return self.head(x)
+        return self.head(x.mean(dim=1))
 
 class ProjectionHead(nn.Module):
     def __init__(self, backbone_dim: int, hidden_dim: int, out_dim: int):
@@ -186,7 +186,7 @@ class MimiStyleModel(nn.Module):
         self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256)
         self.mimi = mimicodec
 
-        self.prediction_head = PredictionHead(latent_dim, hidden_dim=256, output_dim=control_dim)
+        self.prediction_head = PredictionHead(input_dim=latent_dim, hidden_dim=256, output_dim=control_dim)
        
         self.batch_size = batch_size
 
