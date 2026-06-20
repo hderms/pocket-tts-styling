@@ -43,8 +43,9 @@ class PredictionHead(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        print("x is: ", x.shape)
-        return self.head(x.mean(dim=2))
+        print("x is: before:", x.shape)
+        print("x is: after:", x.mean(dim=2).shape)
+        return self.head(x.mean(dim=2).squeeze(2))
 
 class ProjectionHead(nn.Module):
     def __init__(self, backbone_dim: int, hidden_dim: int, out_dim: int):
@@ -223,6 +224,7 @@ class MimiStyleModel(nn.Module):
         # =====================================================================
         # STAGE 2: LATENTS -> CONDITIONED LATENTS
         # =====================================================================
+        print("shape of pre-conditioned latents: ", latents.shape)
         conditioned_latents = self.conditioning_mlp_layer.forward(latents, c)
         print(conditioned_latents.shape)
 
