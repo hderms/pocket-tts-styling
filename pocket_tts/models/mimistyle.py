@@ -180,20 +180,21 @@ class MimiStyleModel(nn.Module):
         mimicodec: MimiModel,
         control_dim: int,
         latent_dim: int,
-        batch_size: int 
+        batch_size: int,
+        device: str
     ):
         super().__init__()
         print("Initialized mimi style model")
-        self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256)
-        self.mimi = mimicodec
+        self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256).to(device)
+        self.mimi = mimicodec.to(device)
 
-        self.prediction_head = PredictionHead(input_dim=latent_dim, hidden_dim=256, output_dim=control_dim)
+        self.prediction_head = PredictionHead(input_dim=latent_dim, hidden_dim=256, output_dim=control_dim).to(device)
        
-        self.batch_size = batch_size
 
         # Stateful modules require cache/offset initialization before decoding.
         # We initialize the state dictionary with a sequence length buffer.
-        self.mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
+        self.mimi_state = init_states(self.mimi, batch_size=batch_size, sequence_length=10000)
+        self.device = device
 
     @property
     def frame_size(self) -> int:
@@ -224,11 +225,9 @@ class MimiStyleModel(nn.Module):
         # =====================================================================
         # STAGE 2: LATENTS -> CONDITIONED LATENTS
         # =====================================================================
-        print("shape of pre-conditioned latents: ", latents.shape)
-        conditioned_latents = self.conditioning_mlp_layer.forward(latents, c)
-        print(conditioned_latents.shape)
+        conditioned_latents = self.conditioning_mlp_layer.forward(latents.to(self.device), c)
 
-        pred = self.prediction_head.forward(conditioned_latents)
+        pred = self.prediction_head.forward(conditioned_latents.to(self.device))
 
         # =====================================================================
         # STAGE 3: CONDITIONED LATENTS -> DECODER -> AUDIO
