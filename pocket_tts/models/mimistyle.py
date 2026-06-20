@@ -181,7 +181,7 @@ class MimiStyleModel(nn.Module):
         control_dim: int,
         latent_dim: int,
         batch_size: int,
-        device: str
+        device: torch.device
     ):
         super().__init__()
         print("Initialized mimi style model")
