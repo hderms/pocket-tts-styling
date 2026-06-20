@@ -45,7 +45,7 @@ class PredictionHead(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         print("x is: before:", x.shape)
         print("x is: after:", x.mean(dim=2).shape)
-        return self.head(x.mean(dim=2).squeeze(2))
+        return self.head(x.mean(dim=2))
 
 class ProjectionHead(nn.Module):
     def __init__(self, backbone_dim: int, hidden_dim: int, out_dim: int):
