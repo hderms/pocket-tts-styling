@@ -43,8 +43,6 @@ class PredictionHead(nn.Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        print("x is: before:", x.shape)
-        print("x is: after:", x.mean(dim=2).shape)
         return self.head(x.mean(dim=2))
 
 class ProjectionHead(nn.Module):
@@ -181,19 +179,19 @@ class MimiStyleModel(nn.Module):
         control_dim: int,
         latent_dim: int,
         batch_size: int,
+        hidden_dim: int,
         device: torch.device
     ):
         super().__init__()
-        print("Initialized mimi style model")
-        self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = 256).to(device)
+        self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = hidden_dim).to(device)
         self.mimi = mimicodec.to(device)
 
-        self.prediction_head = PredictionHead(input_dim=latent_dim, hidden_dim=256, output_dim=control_dim).to(device)
+        self.prediction_head = PredictionHead(input_dim=latent_dim, hidden_dim=hidden_dim, output_dim=control_dim).to(device)
        
+        self.batch_size = batch_size
 
         # Stateful modules require cache/offset initialization before decoding.
         # We initialize the state dictionary with a sequence length buffer.
-        self.mimi_state = init_states(self.mimi, batch_size=batch_size, sequence_length=10000)
         self.device = device
 
     @property
@@ -214,6 +212,8 @@ class MimiStyleModel(nn.Module):
         return self.mimi._to_encoder_framerate(x, mimi_state)
 
     def forward(self, x: torch.Tensor, c: torch.Tensor):
+
+        self.mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
         latents = None
         with torch.no_grad():
         # =====================================================================
@@ -256,29 +256,3 @@ class MimiStyleModel(nn.Module):
         return self.mimi.encode_to_latent(x)
 
 
-
-class ControlVector():
-    # Define the exact feature order from the schema to ensure consistent tensor dimension mapping
-    FEATURE_KEYS = [
-        'AGEV', 'GEND', 'REGS', 'ESTH', 'EXPL', 'BKGN', 'RCQL', 'BRGT', 'WARM', 'FULL',
-        'HARM', 'METL', 'ROUG', 'R_CHST', 'R_HEAD', 'R_MASK', 'R_MIXD', 'R_NASL',
-        'R_ORAL', 'R_THRT', 'TEMP', 'RANG', 'EMPH', 'CHNK', 'SMTH', 'DARC', 'VFLX',
-        'CLRT', 'DFLU', 'COGL', 'STRU', 'RESP', 'TENS', 'ATCK', 'AROU', 'ARSH',
-        'VALN', 'VALS', 'VOLT', 'VULN', 'FOCS', 'STNC', 'S_DRAM', 'S_NARR', 'S_STRY',
-        'S_NEWS', 'S_AUTH', 'S_FORM', 'S_TECH', 'S_MONO', 'S_CONV', 'S_CASU',
-        'S_PLAY', 'S_CART', 'S_RANT', 'S_WHIS', 'S_ASMR'
-    ]
-    @classmethod
-    def build_control_vector(cls, row):
-        """
-        Takes a dataset row matching the provided schema and returns a 1D PyTorch tensor 
-        containing all the 'value' integers.
-        """
-        # Extract the 'value' for each feature in the exact order defined above
-        values = [row[feature_name]['value'] for feature_name in FEATURE_KEYS]
-        
-        # Pack into a PyTorch tensor
-        # Using torch.int32 to match the Value('int32') from the HuggingFace schema
-        control_vector = torch.tensor(values, dtype=torch.int32)
-        
-        return control_vector
