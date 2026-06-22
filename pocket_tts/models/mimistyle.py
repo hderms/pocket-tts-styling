@@ -180,7 +180,8 @@ class MimiStyleModel(nn.Module):
         latent_dim: int,
         batch_size: int,
         hidden_dim: int,
-        device: torch.device
+        device: torch.device,
+        debug: bool = False,
     ):
         super().__init__()
         self.conditioning_mlp_layer = MimiMLPConditioner(control_dim=control_dim, latent_dim = latent_dim, hidden_dim = hidden_dim).to(device)
@@ -189,6 +190,7 @@ class MimiStyleModel(nn.Module):
         self.prediction_head = PredictionHead(input_dim=latent_dim, hidden_dim=hidden_dim, output_dim=control_dim).to(device)
        
         self.batch_size = batch_size
+        self.debug = debug
 
         # Stateful modules require cache/offset initialization before decoding.
         # We initialize the state dictionary with a sequence length buffer.
@@ -240,8 +242,13 @@ class MimiStyleModel(nn.Module):
             latent_to_decode = self.mimi.quantizer(conditioned_latents)
         else:
             latent_to_decode = conditioned_latents
+        if self.debug:
+            print("prediction = ", pred)
+            print("c = ", c)
 
-        loss = 1 - F.cosine_similarity(pred, c, dim=-1).mean()
+
+
+        loss = 1 - F.cosine_similarity(pred, c, dim=1).mean()
         
         with torch.no_grad():
         # Decode back to waveform using the instantiated state
