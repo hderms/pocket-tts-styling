@@ -4,22 +4,12 @@ from pocket_tts.models.mimi import MimiModel
 from pocket_tts.modules.stateful_module import init_states
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 from pocket_tts.modules.conv import pad_for_conv1d
-from pocket_tts.modules.dummy_quantizer import DummyQuantizer
-from pocket_tts.modules.mimi_transformer import ProjectedTransformer
-from pocket_tts.modules.resample import ConvDownsample1d, ConvTrUpsample1d
-from pocket_tts.modules.seanet import SEANetDecoder, SEANetEncoder
+from pocket_tts.models.melspectrogramloss import MelSpectrogramLoss
 
 logger = logging.getLogger()
-import torch
-import torch.nn as nn
-import torch
-import torch.nn as nn
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from melspectrogramloss import MelSpectrogramLoss
 
 class PredictionHead(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int , output_dim: int ):
