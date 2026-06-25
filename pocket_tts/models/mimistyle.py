@@ -45,24 +45,7 @@ class PredictionHead(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.head(x.mean(dim=2))
 
-class ProjectionHead(nn.Module):
-    def __init__(self, backbone_dim: int, hidden_dim: int, out_dim: int):
-        super().__init__()
-        
-        self.head = nn.Sequential(
-            # 1. Take the backbone features and map to a hidden state
-            nn.Linear(backbone_dim, hidden_dim),
-            
-            # 2. Apply non-linearity (standard in modern architectures like SimCLR/CALM)
-            nn.GELU(),
-            
-            # 3. Project to the final required dimensional space
-            nn.Linear(hidden_dim, out_dim)
-        )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x is the massive embedding from your encoder
-        return self.head(x)
 
 import torch
 import torch.nn as nn
