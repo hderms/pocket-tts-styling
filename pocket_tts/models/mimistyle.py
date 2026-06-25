@@ -19,6 +19,7 @@ import torch.nn as nn
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from melspectrogramloss import MelSpectrogramLoss
 
 class PredictionHead(nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int , output_dim: int ):
@@ -178,6 +179,7 @@ class MimiStyleModel(nn.Module):
         # Stateful modules require cache/offset initialization before decoding.
         # We initialize the state dictionary with a sequence length buffer.
         self.device = device
+        self.mel_loss = MelSpectrogramLoss(self.mimi.sample_rate)
 
     @property
     def frame_size(self) -> int:
@@ -213,10 +215,13 @@ class MimiStyleModel(nn.Module):
         conditioned_latents = self.conditioning_mlp_layer.forward(latents.to(self.device), c)
 
         pred = self.prediction_head.forward(conditioned_latents.to(self.device))
+        pred_loss = 1 - F.cosine_similarity(pred, c, dim=1).mean()
 
         # =====================================================================
         # STAGE 3: CONDITIONED LATENTS -> DECODER -> AUDIO
         # =====================================================================
+
+
         
         
         # Mirroring the internal logic of TTSModel._decode_and_dump:
@@ -230,12 +235,15 @@ class MimiStyleModel(nn.Module):
             print("c = ", c)
 
 
+ 
 
-        loss = 1 - F.cosine_similarity(pred, c, dim=1).mean()
         
         with torch.no_grad():
         # Decode back to waveform using the instantiated state
             reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
+        mel_loss = self.mel_loss.forward(reconstructed_wav, x)
+
+        loss = mel_loss.mean() + pred_loss
         return loss, reconstructed_wav
 
 
