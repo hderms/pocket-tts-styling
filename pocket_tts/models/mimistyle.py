@@ -1,9 +1,10 @@
 import logging
+from typing import Callable
 
 from pocket_tts.models.mimi import MimiModel
 from pocket_tts.modules.stateful_module import init_states
 import torch
-from torch import nn
+from torch import Tensor, nn
 import torch.nn.functional as F
 
 from pocket_tts.modules.conv import pad_for_conv1d
@@ -155,6 +156,7 @@ class MimiStyleModel(nn.Module):
         batch_size: int,
         hidden_dim: int,
         device: torch.device,
+        mel_loss: Callable[[Tensor, Tensor], Tensor],
         debug: bool = False,
     ):
         super().__init__()
@@ -169,7 +171,7 @@ class MimiStyleModel(nn.Module):
         # Stateful modules require cache/offset initialization before decoding.
         # We initialize the state dictionary with a sequence length buffer.
         self.device = device
-        self.mel_loss = MelSpectrogramLoss(self.mimi.sample_rate)
+        self.mel_loss = mel_loss
 
     @property
     def frame_size(self) -> int:
@@ -231,7 +233,7 @@ class MimiStyleModel(nn.Module):
         with torch.no_grad():
         # Decode back to waveform using the instantiated state
             reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
-        mel_loss = self.mel_loss.forward(reconstructed_wav, x)
+        mel_loss = self.mel_loss(reconstructed_wav, x)
 
         loss = mel_loss.mean() + pred_loss
         return loss, reconstructed_wav

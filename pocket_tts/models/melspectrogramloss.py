@@ -17,9 +17,19 @@ class MelSpectrogramLoss(nn.Module):
         self.criterion = nn.L1Loss()
 
     def forward(self, x_pred, x_target):
+
+        _, _, t1 = x_pred.shape
+        _, _, t2 = x_target.shape
+        min_length = min(t1, t2)
+
+        x_pred = x_pred.narrow(3, start=0, min_length=min_length)
+        x_target = x_target.narrow(3, start=0, min_length=min_length)
+
+
         # 1. Compute Mel-spectrograms for both target and prediction
         spec_pred = self.mel_spectrogram(x_pred)
         spec_target = self.mel_spectrogram(x_target)
+        
         
         # 2. Convert to Decibel (log) scale to mimic human hearing 
         # (Alternatively, you can use torchaudio.transforms.AmplitudeToDB)
