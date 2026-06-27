@@ -223,15 +223,11 @@ class MimiStyleModel(nn.Module):
             latent_to_decode = conditioned_latents
     
 
-
- 
-
         
-        with torch.no_grad():
         # Decode back to waveform using the instantiated state
 
-            mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
-            reconstructed_wav = self.decode_from_latent(latent_to_decode, mimi_state)
+        mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
+        reconstructed_wav = self.decode_from_latent(latent_to_decode, mimi_state)
         mel_loss = self.mel_loss(reconstructed_wav, x)
 
         loss = mel_loss.mean() + pred_loss
