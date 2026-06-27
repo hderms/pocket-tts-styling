@@ -192,7 +192,6 @@ class MimiStyleModel(nn.Module):
 
     def forward(self, x: torch.Tensor, c: torch.Tensor):
 
-        self.mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
         latents = None
         with torch.no_grad():
         # =====================================================================
@@ -230,7 +229,9 @@ class MimiStyleModel(nn.Module):
         
         with torch.no_grad():
         # Decode back to waveform using the instantiated state
-            reconstructed_wav = self.decode_from_latent(latent_to_decode, self.mimi_state)
+
+            mimi_state = init_states(self.mimi, batch_size=self.batch_size, sequence_length=10000)
+            reconstructed_wav = self.decode_from_latent(latent_to_decode, mimi_state)
         mel_loss = self.mel_loss(reconstructed_wav, x)
 
         loss = mel_loss.mean() + pred_loss
