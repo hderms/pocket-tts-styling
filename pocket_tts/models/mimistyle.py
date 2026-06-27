@@ -222,9 +222,7 @@ class MimiStyleModel(nn.Module):
             latent_to_decode = self.mimi.quantizer(conditioned_latents)
         else:
             latent_to_decode = conditioned_latents
-        if self.debug:
-            print("prediction = ", pred)
-            print("c = ", c)
+    
 
 
  
@@ -236,6 +234,10 @@ class MimiStyleModel(nn.Module):
         mel_loss = self.mel_loss(reconstructed_wav, x)
 
         loss = mel_loss.mean() + pred_loss
+        if self.debug:
+            print("loss = ", loss.item())
+            print("mel_loss = ", mel_loss.mean().item())
+            print("pred_loss = ", pred_loss.item())
         return loss, reconstructed_wav
 
 
